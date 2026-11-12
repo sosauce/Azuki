@@ -1,10 +1,16 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
 
 package com.sosauce.azuki.notes.presentation.list
 
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.BoundsTransform
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.animateBounds
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -39,12 +45,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sosauce.azuki.R
@@ -221,58 +230,72 @@ fun NoteListScreen(
             val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
             val fullLine = StaggeredGridItemSpan.FullLine
 
-            LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Fixed(if (state.layout == NotesLayout.GRID) 2 else 1),
-                contentPadding = PaddingValues(
-                    start = 12.dp,
-                    end = 12.dp,
-                    top = statusBarTop + 16.dp,
-                    bottom = paddingValues.calculateBottomPadding() + 16.dp
-                ),
-                verticalItemSpacing = 8.dp,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                if (state.visibleNotes.isEmpty()) {
-                    item(key = "empty", span = fullLine) {
-                        if (state.isFiltering) {
-                            NoXFound(
-                                headlineText = R.string.no_results,
-                                bodyText = R.string.no_results_desc,
-                                icon = R.drawable.search
-                            )
-                        } else {
-                            NoXFound(
-                                headlineText = R.string.no_notes,
-                                bodyText = R.string.no_notes_desc,
-                                icon = R.drawable.note
-                            )
+            // Lookahead lets each card animate its bounds when the column count changes,
+            // since the grid hands items a fixed width that animateContentSize can't animate.
+            LookaheadScope {
+                LazyVerticalStaggeredGrid(
+                    columns = StaggeredGridCells.Fixed(if (state.layout == NotesLayout.GRID) 2 else 1),
+                    contentPadding = PaddingValues(
+                        start = 12.dp,
+                        end = 12.dp,
+                        top = statusBarTop + 16.dp,
+                        bottom = paddingValues.calculateBottomPadding() + 16.dp
+                    ),
+                    verticalItemSpacing = 8.dp,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    if (state.visibleNotes.isEmpty()) {
+                        item(key = "empty", span = fullLine) {
+                            if (state.isFiltering) {
+                                NoXFound(
+                                    headlineText = R.string.no_results,
+                                    bodyText = R.string.no_results_desc,
+                                    icon = R.drawable.search
+                                )
+                            } else {
+                                NoXFound(
+                                    headlineText = R.string.no_notes,
+                                    bodyText = R.string.no_notes_desc,
+                                    icon = R.drawable.note
+                                )
+                            }
                         }
                     }
-                }
 
-                if (state.pinnedNotes.isNotEmpty()) {
-                    item(key = "pinned_header", span = fullLine) {
-                        SectionHeader(
-                            text = stringResource(R.string.pinned) + " (${state.pinnedNotes.count()})",
-                            icon = R.drawable.pin_filled
+                    if (state.pinnedNotes.isNotEmpty()) {
+                        item(key = "pinned_header", span = fullLine) {
+                            SectionHeader(
+                                text = stringResource(R.string.pinned) + " (${state.pinnedNotes.count()})",
+                                icon = R.drawable.pin_filled
+                            )
+                        }
+                        items(items = state.pinnedNotes, key = { it.id }) { note ->
+                            NoteGridItem(
+                                note = note,
+                                state = state,
+                                lookaheadScope = this@LookaheadScope,
+                                onAction = onAction
+                            )
+                        }
+                        if (state.otherNotes.isNotEmpty()) {
+                            item(key = "others_header", span = fullLine) {
+                                SectionHeader(
+                                    text = stringResource(R.string.others) + " (${state.otherNotes.count()})",
+                                    icon = R.drawable.note
+                                )
+                            }
+                        }
+                    }
+
+                    items(items = state.otherNotes, key = { it.id }) { note ->
+                        NoteGridItem(
+                            note = note,
+                            state = state,
+                            lookaheadScope = this@LookaheadScope,
+                            onAction = onAction
                         )
                     }
-                    items(items = state.pinnedNotes, key = { it.id }) { note ->
-                        NoteGridItem(note = note, state = state, onAction = onAction)
-                    }
-                    if (state.otherNotes.isNotEmpty()) {
-                        item(key = "others_header", span = fullLine) {
-                            SectionHeader(
-                                text = stringResource(R.string.others) + " (${state.otherNotes.count()})",
-                                icon = R.drawable.note
-                            )
-                        }
-                    }
-                }
-
-                items(items = state.otherNotes, key = { it.id }) { note ->
-                    NoteGridItem(note = note, state = state, onAction = onAction)
                 }
             }
         }
@@ -283,6 +306,7 @@ fun NoteListScreen(
 private fun LazyStaggeredGridItemScope.NoteGridItem(
     note: NoteUi,
     state: NoteListState,
+    lookaheadScope: LookaheadScope,
     onAction: (NoteListAction) -> Unit
 ) {
     NoteCard(
@@ -291,7 +315,26 @@ private fun LazyStaggeredGridItemScope.NoteGridItem(
         isListLayout = state.layout == NotesLayout.LIST,
         onClick = { onAction(NoteListAction.OnNoteClick(note.id)) },
         onLongClick = { onAction(NoteListAction.OnNoteLongClick(note.id)) },
-        modifier = Modifier.animateItem()
+        modifier = Modifier
+            .animateItem(placementSpec = NotePlacementSpec)
+            .animateBounds(
+                lookaheadScope = lookaheadScope,
+                boundsTransform = NoteBoundsTransform
+            )
+    )
+}
+
+private val NotePlacementSpec = spring(
+    dampingRatio = Spring.DampingRatioNoBouncy,
+    stiffness = Spring.StiffnessMediumLow,
+    visibilityThreshold = IntOffset.VisibilityThreshold
+)
+
+private val NoteBoundsTransform = BoundsTransform { _, _ ->
+    spring(
+        dampingRatio = Spring.DampingRatioNoBouncy,
+        stiffness = Spring.StiffnessMediumLow,
+        visibilityThreshold = Rect.VisibilityThreshold
     )
 }
 
