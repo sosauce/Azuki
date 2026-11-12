@@ -1,0 +1,147 @@
+<resources>
+    <string name="app_name">Azuki</string>
+
+    <!-- Common -->
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="done">Done</string>
+    <string name="create">Create</string>
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
+    <string name="undo">Undo</string>
+    <string name="copy">Copy</string>
+    <string name="copied">Copied to clipboard</string>
+    <string name="share">Share</string>
+    <string name="pin">Pin</string>
+    <string name="unpin">Unpin</string>
+    <string name="pinned">Pinned</string>
+    <string name="others">Others</string>
+    <string name="selected">Selected</string>
+    <string name="more_options">More options</string>
+    <string name="settings">Settings</string>
+    <string name="untitled">Untitled</string>
+
+    <!-- Notes list -->
+    <string name="search_notes">Search notes</string>
+    <string name="clear_search">Clear search</string>
+    <string name="all_notes">All</string>
+    <string name="no_notes">No notes yet</string>
+    <string name="no_notes_desc">Tap the + button to write your first note.</string>
+    <string name="no_results">Nothing found</string>
+    <string name="no_results_desc">No note matches your search or filter.</string>
+    <string name="grid_view">Grid</string>
+    <string name="list_view">List</string>
+    <string name="sort">Sort</string>
+    <string name="sort_ascending">Ascending</string>
+    <string name="sort_descending">Descending</string>
+    <string name="sort_date_edited">Date edited</string>
+    <string name="sort_date_created">Date created</string>
+    <string name="sort_title">Title</string>
+    <string name="clear_selection">Clear selection</string>
+    <string name="select_all">Select all</string>
+    <string name="unselect_all">Unselect all</string>
+    <string name="move_to_trash">Move to trash</string>
+
+    <plurals name="note_count">
+        <item quantity="one">%d note</item>
+        <item quantity="other">%d notes</item>
+    </plurals>
+    <plurals name="notes_moved_to_trash">
+        <item quantity="one">%d note moved to trash</item>
+        <item quantity="other">%d notes moved to trash</item>
+    </plurals>
+
+    <!-- Note details -->
+    <string name="title_hint">Title</string>
+    <string name="content_hint">Start writing… Markdown is supported.</string>
+    <string name="empty_note_tap_to_edit">This note is empty. Tap to start writing.</string>
+    <string name="edited_on">Edited %1$s</string>
+    <string name="view_mode">View</string>
+    <string name="edit_mode">Edit</string>
+    <string name="note_color">Note color</string>
+    <string name="remove_color">Remove color</string>
+    <string name="note_info">Note info</string>
+    <string name="note_moved_to_trash">Note moved to trash</string>
+    <string name="words">Words</string>
+    <string name="characters">Characters</string>
+    <string name="reading_time">Reading time</string>
+    <string name="created">Created</string>
+    <string name="edited">Edited</string>
+
+    <plurals name="minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+
+    <!-- Markdown toolbar -->
+    <string name="format_bold">Bold</string>
+    <string name="format_italic">Italic</string>
+    <string name="format_strikethrough">Strikethrough</string>
+    <string name="format_heading">Heading</string>
+    <string name="format_task_list">Checklist</string>
+    <string name="format_bullet_list">Bulleted list</string>
+    <string name="format_numbered_list">Numbered list</string>
+    <string name="format_quote">Quote</string>
+    <string name="format_code">Code</string>
+    <string name="format_link">Link</string>
+
+    <!-- Tags -->
+    <string name="tags">Tags</string>
+    <string name="new_tag">New tag</string>
+    <string name="tag_name">Tag name</string>
+    <string name="create_tag">Create tag</string>
+    <string name="rename_tag">Rename tag</string>
+    <string name="delete_tag">Delete tag</string>
+    <string name="delete_tag_confirm">Delete “%1$s”? Notes keep their content, only the tag is removed.</string>
+    <string name="tag_already_exists">A tag named “%1$s” already exists</string>
+    <string name="no_tags_yet">No tags yet, create one below.</string>
+    <string name="no_tags">No tags</string>
+    <string name="no_tags_desc">Tap the + button to create a tag.</string>
+    <string name="manage_tags">Manage tags</string>
+    <string name="manage_tags_desc">Create, rename or delete the tags you use to organize notes.</string>
+
+    <!-- Trash -->
+    <string name="trash">Trash</string>
+    <string name="trash_desc">Trashed notes can be restored or deleted forever.</string>
+    <string name="trash_empty">Trash is empty</string>
+    <string name="trash_empty_desc">Notes you delete will show up here.</string>
+    <string name="trash_emptied">Trash emptied</string>
+    <string name="restore">Restore</string>
+    <string name="delete_forever">Delete forever</string>
+    <string name="empty_trash">Empty trash</string>
+    <string name="empty_trash_confirm">Delete every note in the trash? This can\'t be undone.</string>
+
+    <plurals name="notes_restored">
+        <item quantity="one">%d note restored</item>
+        <item quantity="other">%d notes restored</item>
+    </plurals>
+    <plurals name="notes_deleted">
+        <item quantity="one">%d note deleted forever</item>
+        <item quantity="other">%d notes deleted forever</item>
+    </plurals>
+    <plurals name="delete_notes_confirm">
+        <item quantity="one">Delete %d note forever? This can\'t be undone.</item>
+        <item quantity="other">Delete %d notes forever? This can\'t be undone.</item>
+    </plurals>
+
+    <!-- Settings -->
+    <string name="appearance">Appearance</string>
+    <string name="theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_amoled">Amoled</string>
+    <string name="palette">Palette</string>
+    <string name="font">Font</string>
+    <string name="font_default">Default</string>
+    <string name="font_system">System</string>
+    <string name="notes">Notes</string>
+    <string name="default_open_mode">Open notes in</string>
+    <string name="default_open_mode_desc">New notes always open in edit mode.</string>
+    <string name="notes_layout">Notes layout</string>
+    <string name="editor">Editor</string>
+    <string name="editor_font_size">Font size</string>
+    <string name="unit_sp">sp</string>
+    <string name="markdown_toolbar">Formatting toolbar</string>
+    <string name="markdown_toolbar_desc">Show Markdown shortcuts above the keyboard while editing.</string>
+</resources>
