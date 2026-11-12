@@ -4,9 +4,25 @@ package com.sosauce.azuki.settings
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -19,8 +35,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEachIndexed
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import com.sosauce.azuki.R
+import com.sosauce.azuki.app.navigation.SettingsScreens
 import com.sosauce.azuki.core.preferences.AppSettings
 import com.sosauce.azuki.core.preferences.NotesLayout
 import com.sosauce.azuki.core.preferences.OpenMode
@@ -32,17 +54,21 @@ import com.sosauce.azuki.core.ui.anyLightColorScheme
 import com.sosauce.azuki.core.ui.components.buttons.CuteNavigationButton
 import com.sosauce.azuki.core.ui.isDarkTheme
 import com.sosauce.azuki.settings.components.PaletteTile
+import com.sosauce.nekobites.components.settings.AboutCard
 import com.sosauce.nekobites.components.settings.ScrollPage
 import com.sosauce.nekobites.components.settings.SelectableTile
 import com.sosauce.nekobites.components.settings.SettingOption
+import com.sosauce.nekobites.components.settings.SettingsCard
 import com.sosauce.nekobites.components.settings.SettingsChoice
-import com.sosauce.nekobites.components.settings.SettingsClickable
+import com.sosauce.nekobites.components.settings.SettingsEntry
 import com.sosauce.nekobites.components.settings.SettingsGroup
 import com.sosauce.nekobites.components.settings.SettingsPicker
 import com.sosauce.nekobites.components.settings.SettingsSlider
 import com.sosauce.nekobites.components.settings.SettingsSwitch
 import com.sosauce.nekobites.helpers.ObserveAsEvents
 import org.koin.androidx.compose.koinViewModel
+
+private const val GITHUB_RELEASES = "https://github.com/sosauce/Azuki/releases"
 
 @Composable
 fun SettingsRoot(
@@ -71,19 +97,121 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onAction: (SettingsAction) -> Unit
 ) {
+    val backStack = rememberNavBackStack(SettingsScreens.Home)
+    val goBack: () -> Unit = {
+        if (backStack.size > 1) backStack.removeLastOrNull() else onNavigateBack()
+    }
+
     Scaffold(
-        bottomBar = { CuteNavigationButton(onNavigateUp = onNavigateBack) }
+        bottomBar = { CuteNavigationButton(onNavigateUp = goBack) }
     ) { paddingValues ->
-        ScrollPage(contentPadding = paddingValues) {
-            AppearanceSettings(settings = state.settings, onAction = onAction)
-            NotesSettings(settings = state.settings, onAction = onAction)
-            EditorSettings(settings = state.settings, onAction = onAction)
-            SettingsGroup(title = stringResource(R.string.tags)) {
-                SettingsClickable(
-                    title = stringResource(R.string.manage_tags),
-                    description = stringResource(R.string.manage_tags_desc),
-                    icon = R.drawable.sell,
-                    onClick = { onAction(SettingsAction.OnManageTagsClick) }
+        NavDisplay(
+            backStack = backStack,
+            onBack = goBack,
+            modifier = Modifier.background(MaterialTheme.colorScheme.background),
+            entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
+            transitionSpec = {
+                ContentTransform(
+                    targetContentEnter = slideInHorizontally { it } + fadeIn(),
+                    initialContentExit = slideOutHorizontally { -it / 4 } + fadeOut()
+                )
+            },
+            popTransitionSpec = {
+                ContentTransform(
+                    targetContentEnter = slideInHorizontally { -it / 4 } + fadeIn(),
+                    initialContentExit = slideOutHorizontally { it } + fadeOut()
+                )
+            },
+            predictivePopTransitionSpec = {
+                ContentTransform(
+                    targetContentEnter = slideInHorizontally { -it / 4 } + fadeIn(),
+                    initialContentExit = slideOutHorizontally { it } + fadeOut()
+                )
+            },
+            entryProvider = entryProvider {
+                entry<SettingsScreens.Home> {
+                    SettingsHome(
+                        contentPadding = paddingValues,
+                        onNavigate = { backStack.add(it) },
+                        onManageTagsClick = { onAction(SettingsAction.OnManageTagsClick) }
+                    )
+                }
+                entry<SettingsScreens.LookAndFeel> {
+                    ScrollPage(contentPadding = paddingValues) {
+                        AppearanceSettings(settings = state.settings, onAction = onAction)
+                    }
+                }
+                entry<SettingsScreens.Notes> {
+                    ScrollPage(contentPadding = paddingValues) {
+                        NotesSettings(settings = state.settings, onAction = onAction)
+                    }
+                }
+                entry<SettingsScreens.Editor> {
+                    ScrollPage(contentPadding = paddingValues) {
+                        EditorSettings(settings = state.settings, onAction = onAction)
+                    }
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun SettingsHome(
+    contentPadding: PaddingValues,
+    onNavigate: (SettingsScreens) -> Unit,
+    onManageTagsClick: () -> Unit
+) {
+    val colors = MaterialTheme.colorScheme
+    val badgeColors = listOf(colors.primary, colors.secondary, colors.tertiary)
+    val entries = listOf(
+        SettingsEntry(
+            icon = R.drawable.palette,
+            name = stringResource(R.string.look_and_feel),
+            description = stringResource(R.string.look_and_feel_desc),
+            onClick = { onNavigate(SettingsScreens.LookAndFeel) }
+        ),
+        SettingsEntry(
+            icon = R.drawable.note,
+            name = stringResource(R.string.notes),
+            description = stringResource(R.string.notes_settings_desc),
+            onClick = { onNavigate(SettingsScreens.Notes) }
+        ),
+        SettingsEntry(
+            icon = R.drawable.edit,
+            name = stringResource(R.string.editor),
+            description = stringResource(R.string.editor_settings_desc),
+            onClick = { onNavigate(SettingsScreens.Editor) }
+        ),
+        SettingsEntry(
+            icon = R.drawable.sell,
+            name = stringResource(R.string.manage_tags),
+            description = stringResource(R.string.manage_tags_desc),
+            onClick = onManageTagsClick
+        )
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .statusBarsPadding()
+            .padding(bottom = contentPadding.calculateBottomPadding() + 16.dp)
+            .padding(horizontal = 16.dp)
+    ) {
+        AboutCard(
+            icon = R.drawable.app_icon,
+            appName = stringResource(R.string.app_name),
+            updateLink = GITHUB_RELEASES
+        )
+        Spacer(Modifier.height(20.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            entries.fastForEachIndexed { index, entry ->
+                SettingsCard(
+                    entry = entry,
+                    isFirst = index == 0,
+                    isLast = index == entries.lastIndex,
+                    badgeContainer = badgeColors[index % badgeColors.size]
                 )
             }
         }

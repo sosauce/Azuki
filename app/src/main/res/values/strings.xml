@@ -98,7 +98,7 @@
     <string name="no_tags">No tags</string>
     <string name="no_tags_desc">Tap the + button to create a tag.</string>
     <string name="manage_tags">Manage tags</string>
-    <string name="manage_tags_desc">Create, rename or delete the tags you use to organize notes.</string>
+    <string name="manage_tags_desc">Create, rename or delete the tags you use to organize notes!</string>
 
     <!-- Trash -->
     <string name="trash">Trash</string>
@@ -126,6 +126,10 @@
 
     <!-- Settings -->
     <string name="appearance">Appearance</string>
+    <string name="look_and_feel">Look &amp; feel</string>
+    <string name="look_and_feel_desc">Take note of the appearance!</string>
+    <string name="notes_settings_desc">Your notes, practical!</string>
+    <string name="editor_settings_desc">Editing made smooth!</string>
     <string name="theme">Theme</string>
     <string name="theme_system">System</string>
     <string name="theme_dark">Dark</string>
